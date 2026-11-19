@@ -5,7 +5,10 @@ from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
+DEBUG = os.environ.get(
+    "DEBUG",
+    "False" if os.environ.get("VERCEL") else "True",
+).lower() == "true"
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
     if not DEBUG:

@@ -82,6 +82,8 @@ if DATABASE_URL:
         )
     }
 else:
+    if os.environ.get("VERCEL") and not DEBUG:
+        raise ImproperlyConfigured("Set DATABASE_URL for Vercel deployments.")
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",

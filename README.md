@@ -32,9 +32,9 @@ The page loads Chart.js and Google Fonts from the internet, so connect to Wi-Fi 
    `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`.
    Add it as the `SECRET_KEY` environment variable in Vercel, and set `DEBUG` to
    `false`. Keep the secret out of GitHub.
-4. Deploy. Vercel supplies the deployment host names automatically; Django uses
-   them for allowed hosts and CSRF checks. Future pushes to `main` trigger a
-   redeployment.
+4. Deploy. The Vercel build runs Django migrations against `DATABASE_URL`.
+   Vercel supplies deployment host names automatically; Django uses them for
+   allowed hosts and CSRF checks. Future pushes to `main` trigger redeployment.
 
 ## Demo script (about 3 minutes)
 

@@ -19,16 +19,22 @@ Open http://127.0.0.1:8000/
 
 The page loads Chart.js and Google Fonts from the internet, so connect to Wi-Fi before the demo.
 
-## Deploy to Render
+## Deploy to Vercel
 
-1. Push this project folder to a GitHub repository.
-2. In Render, choose **New + → Blueprint**, connect the repository, and deploy.
-   Render reads `render.yaml` to build the app, collect static files, run database
-   migrations, and generate a production `SECRET_KEY`.
-3. The included free web service uses SQLite on Render's temporary filesystem.
-   Its database can reset when the service restarts or redeploys. For persistent
-   logs, create a Render PostgreSQL database and set the service's `DATABASE_URL`
-   environment variable to its connection string; Django will use it automatically.
+1. In Vercel, choose **Add New → Project** and import
+   [Vaishnavigp10/logwatch](https://github.com/Vaishnavigp10/logwatch). Vercel
+   detects Django from `manage.py` and `requirements.txt`; it also collects and
+   serves static files from `STATIC_ROOT`.
+2. Add a PostgreSQL database integration and make its connection string available
+   as `DATABASE_URL`. Vercel functions have an ephemeral filesystem, so the local
+   SQLite database is not suitable for persistent logs.
+3. Generate a Django secret locally with
+   `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`.
+   Add it as the `SECRET_KEY` environment variable in Vercel, and set `DEBUG` to
+   `false`. Keep the secret out of GitHub.
+4. Deploy. Vercel supplies the deployment host names automatically; Django uses
+   them for allowed hosts and CSRF checks. Future pushes to `main` trigger a
+   redeployment.
 
 ## Demo script (about 3 minutes)
 

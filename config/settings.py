@@ -1,15 +1,16 @@
 import os
 import dj_database_url
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "dev-only-change-me-before-deploying"
-)
-
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured("Set SECRET_KEY when DEBUG is disabled.")
+    SECRET_KEY = "dev-only-change-me-before-deploying"
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 ALLOWED_HOSTS.extend(
@@ -18,15 +19,14 @@ ALLOWED_HOSTS.extend(
     if host.strip()
 )
 
-if os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
-    render_hostname = os.environ["RENDER_EXTERNAL_HOSTNAME"]
-    ALLOWED_HOSTS.append(render_hostname)
-
-CSRF_TRUSTED_ORIGINS = []
-if os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
-    CSRF_TRUSTED_ORIGINS.append(
-        f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}"
-    )
+VERCEL_HOSTS = [
+    os.environ.get("VERCEL_URL"),
+    os.environ.get("VERCEL_PROJECT_PRODUCTION_URL"),
+]
+ALLOWED_HOSTS.extend(host for host in VERCEL_HOSTS if host)
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{host}" for host in VERCEL_HOSTS if host
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -93,7 +93,7 @@ TIME_ZONE = "Asia/Kolkata"
 USE_I18N = True
 USE_TZ = False  # naive local times keep log timestamps simple
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STORAGES = {
     "default": {

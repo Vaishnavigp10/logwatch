@@ -1,0 +1,42 @@
+{% extends "monitor/base.html" %}
+{% load static %}
+{% block title %}Upload logs{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>Upload logs</h1>
+    <p class="sub">Analyse a real log file. Each line is read, grouped into minutes and checked for anomalies.</p>
+  </div>
+</header>
+
+<section class="grid grid-even">
+  <div class="card">
+    <h2>Choose a file</h2>
+    <form method="post" enctype="multipart/form-data" class="upload-form">
+      {% csrf_token %}
+      <label for="logfile">Log file (.log or .txt, up to 5 MB)</label>
+      <input type="file" name="logfile" id="logfile" accept=".log,.txt" required>
+      <button class="btn btn-primary" type="submit">Upload and analyse</button>
+    </form>
+    <p class="muted">No log file yet? <a class="link" href="{% static 'monitor/sample.log' %}" download>Download a sample</a> and upload it here.</p>
+  </div>
+  <div class="card">
+    <h2>Expected line format</h2>
+    <pre class="code">2026-11-19 10:15:32 INFO web-api 10.0.1.12 GET /cart status=200
+2026-11-19 10:15:40 ERROR payment-service 10.0.1.14 Connection pool exhausted status=500
+2026-11-19 10:15:44 WARN auth-service 203.0.113.45 POST /login login failed status=401</pre>
+    <p class="muted">Each line has a date and time, a level, a service name, an IP address and a message. Lines that do not match are skipped and counted.</p>
+  </div>
+</section>
+
+<section class="card danger-zone">
+  <div>
+    <h2>Clear all data</h2>
+    <p class="muted">Deletes every log line and anomaly so you can start a fresh demo.</p>
+  </div>
+  <form method="post" action="{% url 'reset' %}" onsubmit="return confirm('Delete all logs and anomalies?');">
+    {% csrf_token %}
+    <button class="btn btn-danger" type="submit">Clear all data</button>
+  </form>
+</section>
+{% endblock %}

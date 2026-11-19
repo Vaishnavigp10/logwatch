@@ -1,0 +1,54 @@
+{% extends "monitor/base.html" %}
+{% block title %}Anomalies{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>Anomalies</h1>
+    <p class="sub">Minutes where the model saw unusual behaviour, with the likely cause.</p>
+  </div>
+  <a class="btn" href="{% url 'anomalies_export' %}">Download CSV</a>
+</header>
+
+<form method="get" class="filters">
+  <label for="f-severity">Severity</label>
+  <select name="severity" id="f-severity">
+    <option value="">All</option>
+    <option value="High" {% if severity == 'High' %}selected{% endif %}>High</option>
+    <option value="Medium" {% if severity == 'Medium' %}selected{% endif %}>Medium</option>
+    <option value="Low" {% if severity == 'Low' %}selected{% endif %}>Low</option>
+  </select>
+  <label for="f-state">Status</label>
+  <select name="state" id="f-state">
+    <option value="">All</option>
+    <option value="open" {% if state == 'open' %}selected{% endif %}>Open</option>
+    <option value="reviewed" {% if state == 'reviewed' %}selected{% endif %}>Reviewed</option>
+  </select>
+  <button class="btn" type="submit">Apply</button>
+</form>
+
+<div class="card table-card">
+  {% if anomalies %}
+  <div class="table-scroll">
+  <table class="table">
+    <thead><tr><th>Time</th><th>Severity</th><th>Likely cause</th><th class="num">Events</th><th class="num">Errors</th><th class="num">Failed logins</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for a in anomalies %}
+      <tr>
+        <td class="nowrap">{{ a.window_start|date:"d M, H:i" }}</td>
+        <td><span class="badge badge-{{ a.severity|lower }}">{{ a.severity }}</span></td>
+        <td class="cause-cell">{{ a.cause }}</td>
+        <td class="num">{{ a.total_events }}</td>
+        <td class="num">{{ a.error_count }}</td>
+        <td class="num">{{ a.failed_logins }}</td>
+        <td>{% if a.acknowledged %}<span class="status status-done">Reviewed</span>{% else %}<span class="status">Open</span>{% endif %}</td>
+        <td><a class="link" href="{% url 'anomaly_detail' a.pk %}">Investigate</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty"><p>No anomalies match these filters. If you have not loaded any logs yet, start from the dashboard or upload a file.</p><a class="btn btn-primary" href="{% url 'dashboard' %}">Go to dashboard</a></div>
+  {% endif %}
+</div>
+{% endblock %}

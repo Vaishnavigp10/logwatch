@@ -1,0 +1,54 @@
+{% extends "monitor/base.html" %}
+{% block title %}Logs{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1>Logs</h1>
+    <p class="sub">Every line the system has read, newest first.</p>
+  </div>
+</header>
+
+<form method="get" class="filters">
+  <label for="q">Search</label>
+  <input type="search" name="q" id="q" value="{{ q }}" placeholder="Message, IP or service">
+  <label for="level">Level</label>
+  <select name="level" id="level">
+    <option value="">All</option>
+    <option value="DEBUG" {% if level == 'DEBUG' %}selected{% endif %}>DEBUG</option>
+    <option value="INFO" {% if level == 'INFO' %}selected{% endif %}>INFO</option>
+    <option value="WARN" {% if level == 'WARN' %}selected{% endif %}>WARN</option>
+    <option value="ERROR" {% if level == 'ERROR' %}selected{% endif %}>ERROR</option>
+    <option value="CRITICAL" {% if level == 'CRITICAL' %}selected{% endif %}>CRITICAL</option>
+  </select>
+  <label class="check"><input type="checkbox" name="errors" value="1" {% if only_errors %}checked{% endif %}> Errors only</label>
+  <button class="btn" type="submit">Apply</button>
+</form>
+
+<div class="card table-card">
+  {% if page.object_list %}
+  <div class="table-scroll">
+  <table class="table log-table">
+    <thead><tr><th>Time</th><th>Level</th><th>Service</th><th>IP address</th><th>Message</th></tr></thead>
+    <tbody>
+    {% for l in page %}
+      <tr>
+        <td class="nowrap mono">{{ l.timestamp|date:"d M H:i:s" }}</td>
+        <td><span class="level level-{{ l.level|lower }}">{{ l.level }}</span></td>
+        <td>{{ l.service }}</td>
+        <td class="mono">{{ l.ip }}</td>
+        <td class="mono msg">{{ l.message }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <nav class="pager" aria-label="Pages">
+    {% if page.has_previous %}<a class="btn" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page.previous_page_number }}">Previous</a>{% else %}<span></span>{% endif %}
+    <span class="muted">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a class="btn" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page.next_page_number }}">Next</a>{% else %}<span></span>{% endif %}
+  </nav>
+  {% else %}
+  <div class="empty"><p>No log lines match. Clear the filters, or load logs from the dashboard.</p><a class="btn btn-primary" href="{% url 'dashboard' %}">Go to dashboard</a></div>
+  {% endif %}
+</div>
+{% endblock %}

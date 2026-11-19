@@ -1,0 +1,44 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Logwatch{% endblock %} | Logwatch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'monitor/css/style.css' %}">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="{% url 'dashboard' %}">
+      <svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#12806A"/><path d="M5 18h5l3-8 5 14 3-9 2 3h4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Logwatch<small>Log anomaly detection</small></span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg>Dashboard</a>
+      <a href="{% url 'anomalies' %}" class="{% if request.resolver_match.url_name == 'anomalies' or request.resolver_match.url_name == 'anomaly_detail' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l10 18H2L12 3zM12 10v5M12 18v.5"/></svg>Anomalies</a>
+      <a href="{% url 'logs' %}" class="{% if request.resolver_match.url_name == 'logs' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Logs</a>
+      <a href="{% url 'upload' %}" class="{% if request.resolver_match.url_name == 'upload' %}active{% endif %}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload logs</a>
+    </nav>
+    <p class="sidebar-note">Isolation Forest model on one-minute windows. Alerts print in the terminal, standing in for Amazon SNS.</p>
+  </aside>
+
+  <main class="main" id="main">
+    {% if messages %}
+    <div class="toasts" role="status">
+      {% for message in messages %}
+        <div class="toast toast-{{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{% extends "monitor/base.html" %}
+{% block title %}Anomaly at {{ anomaly.window_start|date:"H:i" }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'anomalies' %}">Back to anomalies</a>
+<header class="page-head">
+  <div>
+    <h1>{{ anomaly.window_start|date:"d M Y, H:i" }}</h1>
+    <p class="sub"><span class="badge badge-{{ anomaly.severity|lower }}">{{ anomaly.severity }}</span> anomaly score {{ anomaly.score }} out of 100</p>
+  </div>
+  <form method="post" action="{% url 'acknowledge' anomaly.pk %}">
+    {% csrf_token %}
+    <button class="btn {% if not anomaly.acknowledged %}btn-primary{% endif %}" type="submit">{% if anomaly.acknowledged %}Reopen{% else %}Mark as reviewed{% endif %}</button>
+  </form>
+</header>
+
+<section class="card cause-card">
+  <h2>Probable cause</h2>
+  <p class="cause-text">{{ anomaly.cause }}</p>
+  <p class="muted">This is a hint to start the investigation, not proof. An engineer should confirm it in the log lines below.</p>
+</section>
+
+<section class="compare" aria-label="This minute compared with typical minutes">
+  {% for label, value, typical in comparison %}
+  <div class="compare-item">
+    <span class="stat-label">{{ label }}</span>
+    <strong>{{ value }}</strong>
+    <span class="muted">typical {{ typical }}</span>
+  </div>
+  {% endfor %}
+</section>
+
+<section class="card table-card">
+  <div class="card-head pad">
+    <h2>Suspicious log lines</h2>
+    <span class="muted">Showing {{ suspicious|length }} of {{ suspicious_total }} flagged lines. The minute holds {{ window_total }} lines in total.</span>
+  </div>
+  <div class="table-scroll">
+  <table class="table log-table">
+    <thead><tr><th>Time</th><th>Level</th><th>Service</th><th>IP address</th><th>Message</th></tr></thead>
+    <tbody>
+    {% for l in suspicious %}
+      <tr>
+        <td class="nowrap mono">{{ l.timestamp|date:"H:i:s" }}</td>
+        <td><span class="level level-{{ l.level|lower }}">{{ l.level }}</span></td>
+        <td>{{ l.service }}</td>
+        <td class="mono">{{ l.ip }}</td>
+        <td class="mono msg">{{ l.message }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="muted-line">No error or failed login lines in this minute. The change was in traffic volume.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

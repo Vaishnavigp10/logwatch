@@ -1,0 +1,95 @@
+{% extends "monitor/base.html" %}
+{% load static humanize %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <h1 id="headline">{{ payload.headline }}</h1>
+    <p class="sub" id="subline">{{ payload.subline }}</p>
+  </div>
+  <form method="post" action="{% url 'run_detect' %}" class="inline-form">
+    {% csrf_token %}
+    <label for="sensitivity">Sensitivity</label>
+    <select name="sensitivity" id="sensitivity">
+      <option value="low" {% if sensitivity == 'low' %}selected{% endif %}>Low</option>
+      <option value="medium" {% if sensitivity == 'medium' %}selected{% endif %}>Medium</option>
+      <option value="high" {% if sensitivity == 'high' %}selected{% endif %}>High</option>
+    </select>
+    <button class="btn btn-primary" type="submit">Run detection</button>
+  </form>
+</header>
+
+<section class="stats" aria-label="Summary">
+  <div class="stat"><span class="stat-label">Log lines analysed</span><strong id="stat-total">{{ payload.stats.total_logs|intcomma }}</strong></div>
+  <div class="stat"><span class="stat-label">Error rate</span><strong><span id="stat-rate">{{ payload.stats.error_rate }}</span>%</strong></div>
+  <div class="stat stat-alert"><span class="stat-label">Open anomalies</span><strong id="stat-open">{{ payload.stats.open_anomalies }}</strong></div>
+  <div class="stat"><span class="stat-label">Latest anomaly</span><strong class="stat-small" id="stat-last">{{ payload.stats.last_anomaly }}</strong></div>
+</section>
+
+<section class="grid">
+  <div class="card chart-card">
+    <div class="card-head">
+      <h2>Activity per minute</h2>
+      <ul class="legend" aria-label="Chart legend">
+        <li><i class="dot dot-total"></i>All events</li>
+        <li><i class="dot dot-errors"></i>Errors</li>
+        <li><i class="dot dot-logins"></i>Failed logins</li>
+        <li><i class="dot dot-band"></i>Anomaly</li>
+      </ul>
+    </div>
+    {% if has_logs %}
+      <div class="chart-wrap"><canvas id="timeline" aria-label="Line chart of events, errors and failed logins per minute" role="img"></canvas></div>
+    {% else %}
+      <div class="empty">
+        <p>There is nothing to chart yet. Load an hour of demo traffic with an error spike and a login attack hidden inside it.</p>
+        <form method="post" action="{% url 'generate' 'demo' %}">{% csrf_token %}<button class="btn btn-primary">Load demo traffic</button></form>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h2>Needs review</h2><a href="{% url 'anomalies' %}" class="link">View all</a></div>
+    <ul class="alert-list" id="open-list">
+      {% for a in payload.open %}
+      <li>
+        <a href="{{ a.url }}">
+          <span class="badge badge-{{ a.severity|lower }}">{{ a.severity }}</span>
+          <span class="alert-time">{{ a.time }}</span>
+          <span class="alert-cause">{{ a.cause }}</span>
+        </a>
+      </li>
+      {% empty %}
+      <li class="muted-line">No open anomalies.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+
+<section class="grid grid-even">
+  <div class="card">
+    <h2>Create demo traffic</h2>
+    <p class="muted">Simulate a server, then watch the detector react. Each button adds logs and runs detection.</p>
+    <div class="btn-row">
+      <form method="post" action="{% url 'generate' 'demo' %}">{% csrf_token %}<button class="btn btn-primary">Load full demo</button></form>
+      <form method="post" action="{% url 'generate' 'normal' %}">{% csrf_token %}<button class="btn">Add normal traffic</button></form>
+      <form method="post" action="{% url 'generate' 'spike' %}">{% csrf_token %}<button class="btn">Add error spike</button></form>
+      <form method="post" action="{% url 'generate' 'attack' %}">{% csrf_token %}<button class="btn">Add login attack</button></form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Live stream</h2>
+    <p class="muted">Adds one minute of logs every few seconds. Inject a problem while it runs and watch the chart.</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="live-toggle" type="button" {% if not has_logs %}disabled title="Load demo traffic first"{% endif %}>Start live stream</button>
+      <button class="btn" id="inject-spike" type="button" disabled>Inject error spike</button>
+      <button class="btn" id="inject-attack" type="button" disabled>Inject login attack</button>
+    </div>
+    <p class="live-status" id="live-status" aria-live="polite"></p>
+  </div>
+</section>
+
+{{ payload|json_script:"chart-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="{% static 'monitor/js/dashboard.js' %}"></script>
+{% endblock %}
